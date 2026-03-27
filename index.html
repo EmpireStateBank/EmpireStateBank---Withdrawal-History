@@ -1,339 +1,1002 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Withdrawal Status</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: #f4f8fb;
-      margin: 0;
-      min-height: 100vh;
-    }
-    .container {
-      max-width: 400px;
-      background: white;
-      margin: 56px auto 0 auto;
-      border-radius: 10px;
-      box-shadow: 0 3px 16px rgba(0,0,0,0.11);
-      padding: 32px;
-    }
-    h2 {
-      text-align: center;
-      margin-top: 0;
-      color: #233;
-    }
-    input[type="password"] {
-      width: 100%;
-      font-size: 1.7em;
-      letter-spacing: 1em;
-      padding: 12px;
-      margin-bottom: 16px;
-      box-sizing: border-box;
-      border: 1px solid #b5bac8;
-      border-radius: 6px;
-      text-align: center;
-      background: #f8fafc;
-    }
-    button {
-      width: 100%;
-      background: #3885f7;
-      color: white;
-      border: 0;
-      border-radius: 6px;
-      padding: 13px 0;
-      font-size: 1.15em;
-      cursor: pointer;
-      margin-top: 6px;
-      margin-bottom: 8px;
-      font-weight: 500;
-      transition: background .18s;
-    }
-    button:hover {
-      background: #2769bd;
-    }
-    .error {
-      color: #d01c2a;
-      text-align: center;
-      margin-bottom: 10px;
-      min-height: 18px;
-    }
-    .loading {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin: 28vh 0 0 0;
-    }
-    .spinner {
-      border: 6px solid #e3e5ed;
-      border-top: 6px solid #3885f7;
-      border-radius: 50%;
-      width: 38px;
-      height: 38px;
-      margin-bottom: 18px;
-      animation: spin 0.85s linear infinite;
-    }
-    @keyframes spin {
-      0% {transform: rotate(0deg);}
-      100% {transform: rotate(360deg);}
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 18px;
-      margin-bottom: 15px;
-    }
-    th, td {
-      border-bottom: 1px solid #e7e9ee;
-      padding: 8px;
-      text-align: center;
-    }
-    th {
-      background: #f5f7fa;
-      color: #333;
-    }
-    tr:last-child td {
-      border-bottom: none;
-    }
-    .status {
-      font-weight: 500;
-    }
-    .ok { color: #249a41;}
-    .pending { color: #f9a603;}
-    .fail, .refund { color: #d01c2a; }
-    .logout-btn {
-      background: #ccd4e5;
-      color: #223;
-      font-size: 0.99em;
-      margin-top: 15px;
-      transition: background .18s, color .14s;
-    }
-    .logout-btn:hover { background: #b2bed8; color: #090e19;}
-    .info-message {
-      max-width: 400px;
-      margin: 10vw auto 0 auto;
-      background: #fff7e5;
-      color: #673f09;
-      border: 1px solid #f4e0b3;
-      border-radius: 9px;
-      text-align: center;
-      padding: 35px 18px 34px 18px;
-      font-size: 1.21em;
-      box-shadow: 0 2px 8px rgba(194,140,2,0.07);
-    }
-    @media (max-width: 600px) {
-      .container, .info-message {
-        margin: 32px 6px 0 6px;
-        padding: 16px;
-      }
-      table, th, td {
-        font-size: 15px;
-      }
-      h2 { font-size: 1.25em;}
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EmpireStateBank - Withdrawal History</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        /* PIN LOGIN SCREEN */
+        .login-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 30px;
+            background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .login-screen.hidden {
+            display: none;
+        }
+
+        .login-logo {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .login-title {
+            font-size: 24px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .login-subtitle {
+            font-size: 14px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+            text-align: center;
+        }
+
+        .pin-input-container {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .pin-input-label {
+            display: block;
+            margin-bottom: 15px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .pin-input-fields {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .pin-input-fields input {
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            text-align: center;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .pin-input-fields input:focus {
+            outline: none;
+            border-color: white;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .pin-input-fields input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .login-error {
+            color: #ff6b6b;
+            font-size: 14px;
+            margin-bottom: 20px;
+            min-height: 20px;
+            text-align: center;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: white;
+            color: #1abc9c;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        /* MAIN SCREEN */
+        .main-screen {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: #f8f9fa;
+        }
+
+        .main-screen.hidden {
+            display: none;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
+            color: white;
+            padding: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-info h2 {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .header-info p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .content-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .withdrawal-item {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #1abc9c;
+        }
+
+        .withdrawal-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .withdrawal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .withdrawal-recipient {
+            font-weight: 600;
+            color: #333;
+            font-size: 15px;
+        }
+
+        .withdrawal-bank {
+            font-size: 12px;
+            color: #666;
+            margin-top: 3px;
+        }
+
+        .withdrawal-amount {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1abc9c;
+        }
+
+        .withdrawal-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+        }
+
+        .withdrawal-date {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .withdrawal-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+
+        .status-successful {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* RECEIPT SCREEN */
+        .receipt-screen {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: #f8f9fa;
+        }
+
+        .receipt-screen.hidden {
+            display: none;
+        }
+
+        .receipt-header {
+            background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .receipt-back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .receipt-back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .receipt-title {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .receipt-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .receipt-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            max-width: 380px;
+            margin-top: 10px;
+        }
+
+        .receipt-watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 120px;
+            opacity: 0.05;
+            color: #1abc9c;
+            z-index: 1;
+            font-weight: bold;
+        }
+
+        .receipt-logo {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #1abc9c;
+            position: relative;
+            z-index: 2;
+        }
+
+        .receipt-status-badge {
+            text-align: center;
+            margin-bottom: 15px;
+            padding: 8px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 13px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .receipt-amount {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .receipt-amount-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .receipt-amount-value {
+            font-size: 38px;
+            font-weight: bold;
+            color: #1abc9c;
+        }
+
+        .receipt-section {
+            margin: 18px 0;
+            padding: 15px 0;
+            border-top: 1px solid #eee;
+            position: relative;
+            z-index: 2;
+        }
+
+        .receipt-section:first-of-type {
+            border-top: none;
+            margin-top: 5px;
+        }
+
+        .receipt-section-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: #999;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .receipt-field {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .receipt-field-label {
+            color: #666;
+        }
+
+        .receipt-field-value {
+            color: #333;
+            font-weight: 500;
+            word-break: break-word;
+            text-align: right;
+            max-width: 55%;
+        }
+
+        .receipt-footer {
+            text-align: center;
+            margin-top: 18px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            position: relative;
+            z-index: 2;
+        }
+
+        .receipt-footer-text {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .receipt-actions {
+            display: flex;
+            gap: 12px;
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #eee;
+        }
+
+        .receipt-action-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .receipt-share-image-btn {
+            background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
+            color: white;
+        }
+
+        .receipt-share-image-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(26, 188, 156, 0.4);
+        }
+
+        .receipt-share-pdf-btn {
+            background: white;
+            color: #1abc9c;
+            border: 2px solid #1abc9c;
+        }
+
+        .receipt-share-pdf-btn:hover {
+            background: #f0fffe;
+            transform: translateY(-2px);
+        }
+
+        /* EXPORT CARD - Hidden from view but used for export */
+        .receipt-card-export {
+            position: fixed;
+            top: -9999px;
+            left: -9999px;
+            background: white;
+            border-radius: 12px;
+            padding: 40px 30px;
+            overflow: hidden;
+            width: 400px;
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #1abc9c;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #16a085;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 480px) {
+            .container {
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            .receipt-card {
+                padding: 20px 15px;
+                max-width: 100%;
+            }
+
+            .receipt-amount-value {
+                font-size: 32px;
+            }
+
+            .receipt-watermark {
+                font-size: 80px;
+            }
+
+            .receipt-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div id="main"></div>
-  <script>
-    // First, check UTC time
-    function isAfter18UTC() {
-      const now = new Date();
-      const hour = now.getUTCHours();
-      return hour >= 18;
-    }
+    <!-- LOGIN SCREEN -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-logo">💳</div>
+        <h1 class="login-title">EmpireStateBank</h1>
+        <p class="login-subtitle">Enter your PIN to access your account</p>
 
-    function showTimeMessage() {
-      document.getElementById('main').innerHTML = `
-        <div class="info-message">
-          Withdrawal status is only available<br>from <b>18:00 UTC</b> onward.<br>
-          <div style="margin-top:13px;font-size:.99em;">
-            Current UTC Time: <span id="utc-time"></span>
-          </div>
+        <div class="pin-input-container">
+            <label class="pin-input-label">4-DIGIT PIN</label>
+            <div class="pin-input-fields">
+                <input type="password" id="pin1" maxlength="1" placeholder="•" inputmode="numeric" />
+                <input type="password" id="pin2" maxlength="1" placeholder="•" inputmode="numeric" />
+                <input type="password" id="pin3" maxlength="1" placeholder="•" inputmode="numeric" />
+                <input type="password" id="pin4" maxlength="1" placeholder="•" inputmode="numeric" />
+            </div>
+            <div class="login-error" id="loginError"></div>
         </div>
-      `;
-      // live update UTC time
-      function updateTime() {
-        const now = new Date();
-        const pad = n => n.toString().padStart(2,'0');
-        document.getElementById('utc-time').textContent =
-          pad(now.getUTCHours())+':'+pad(now.getUTCMinutes())+':'+pad(now.getUTCSeconds());
-      }
-      updateTime();
-      setInterval(updateTime, 1000);
-    }
 
-    if (!isAfter18UTC()) {
-      showTimeMessage();
-    } else {
-      // ---- WITHDRAWAL LOGIC BELOW ----
-      // Withdrawal data, mapped by PIN
-      const withdrawalRecords = {
-        "3572": [
-          { date: "2025-11-01", amount: 5000, status: "Withdraw successful" },
-          { date: "2025-11-02", amount: 8000, status: "Fail" },
-          { date: "2025-11-02", amount: 8000, status: "Refund" },
-        ],
-        "4073": [
-          { date: "2025-09-04", amount: 7000, status: "Fail" },
-          { date: "2025-11-05", amount: 7000, status: "Refund" },
-        ],
-        "1313": [
-          { date: "2025-09-01", amount: 7000, status: "Withdraw successful" },
-        ],
-        "5012": [
-          { date: "2025-09-03", amount: 17000, status: "Fail" },
-          { date: "2025-11-03", amount: 17000, status: "Refund" },
-        ],
-        "1266": [
-          { date: "2025-11-04", amount: 250, status: "Withdraw successful" },
-        ],
-        "1220": [
-          { date: "2025-11-06", amount: 300, status: "Fail" },
-        ],
-        "2019": [
-          { date: "2025-11-04", amount: 9000, status: "Fail" },
-          { date: "2025-11-05", amount: 9000, status: "Refund" },
-        ],
-        "1908": [
-          { date: "2025-09-12", amount: 7000, status: "Fail" },
-          { date: "2025-11-05", amount: 7000, status: "Refund" },
-          { date: "2025-11-13", amount: 2000, status: "Withdraw successful" },
-          { date: "2025-11-20", amount: 2000, status: "Withdraw successful" },
-          { date: "2025-11-29", amount: 3000, status: "Pending" },
-        ],
-        "1995": [
-          { date: "2026-01-27", amount: 1000, status: "Withdraw successful" },
-          { date: "2026-02-10", amount: 9000, status: "Pending" },
-        ],
-        "2255": [
-          { date: "2026-01-15", amount: 13000, status: "Pending" },
-          { date: "2026-01-21", amount: 1000, status: "Withdraw successful" },
-        ],
-      };
+        <button class="login-btn" id="loginBtn">Login</button>
+    </div>
 
-      const pinStatusClass = status =>
-        status === "Withdraw successful" ? "ok"
-          : status === "Pending" ? "pending"
-          : status === "Fail" ? "fail"
-          : status === "Refund" ? "refund"
-          : "";
+    <!-- MAIN SCREEN -->
+    <div class="main-screen hidden" id="mainScreen">
+        <div class="header">
+            <div class="header-info">
+                <h2 id="accountName">John Doe</h2>
+                <p id="bankName">EmpireStateBank</p>
+            </div>
+            <button class="logout-btn" id="logoutBtn">Logout</button>
+        </div>
+        <div class="content">
+            <h3 class="content-title">Recent Withdrawals</h3>
+            <div id="withdrawalsList"></div>
+        </div>
+    </div>
 
-      const main = document.getElementById('main');
+    <!-- RECEIPT SCREEN -->
+    <div class="receipt-screen hidden" id="receiptScreen">
+        <div class="receipt-header">
+            <button class="receipt-back-btn" id="backBtn">← Back</button>
+            <div class="receipt-title">Transaction Receipt</div>
+            <div style="width: 60px;"></div>
+        </div>
+        <div class="receipt-content">
+            <div class="receipt-card" id="receiptCard">
+                <div class="receipt-watermark" id="receiptWatermark">💳</div>
 
-      // State
-      let state = "init-loading"; // init-loading, pin, loading, status
-      let errorMsg = "";
-      let currentPin = "";
+                <div class="receipt-logo">💳 ESB</div>
 
-      // Render functions
-      function showLoading(text) {
-        main.innerHTML = `
-          <div class="loading">
-            <div class="spinner"></div>
-            <div>${text || "Loading..."}</div>
-          </div>
-        `;
-      }
+                <div class="receipt-status-badge" id="receiptStatusBadge"></div>
 
-      function showPinInput() {
-        main.innerHTML = `
-          <div class="container">
-            <h2>Enter Your PIN</h2>
-            <div class="error">${errorMsg || "&nbsp;"}</div>
-            <form id="pin-form" autocomplete="off">
-              <input
-                type="password"
-                pattern="\\d{4}"
-                maxlength="4"
-                placeholder="4-digit PIN"
-                inputmode="numeric"
-                id="pin-input"
-                required
-              /><br>
-              <button type="submit">Submit</button>
-            </form>
-          </div>
-        `;
+                <div class="receipt-amount">
+                    <div class="receipt-amount-label">Amount Transferred</div>
+                    <div class="receipt-amount-value" id="receiptAmount">₦0.00</div>
+                </div>
 
-        setTimeout(() => {
-          const pinInput = document.getElementById('pin-input');
-          if(pinInput) pinInput.focus();
-        }, 200);
+                <div class="receipt-section">
+                    <div class="receipt-section-title">To (Recipient)</div>
+                    <div class="receipt-field">
+                        <span class="receipt-field-label">Account Name</span>
+                        <span class="receipt-field-value" id="receiptRecipientName">-</span>
+                    </div>
+                    <div class="receipt-field">
+                        <span class="receipt-field-label">Bank</span>
+                        <span class="receipt-field-value" id="receiptRecipientBank">-</span>
+                    </div>
+                    <div class="receipt-field">
+                        <span class="receipt-field-label">Phone</span>
+                        <span class="receipt-field-value" id="receiptRecipientPhone">-</span>
+                    </div>
+                </div>
 
-        document.getElementById('pin-form').onsubmit = function(e) {
-          e.preventDefault();
-          const enteredPin = document.getElementById('pin-input').value.trim();
-          if (withdrawalRecords.hasOwnProperty(enteredPin)) {
-            errorMsg = "";
-            currentPin = enteredPin;
-            state = "loading";
-            render();
-            setTimeout(() => {
-              state = "status";
-              render();
-            }, 6000);
-          } else {
-            errorMsg = "Invalid PIN. Please try again.";
-            render();
-          }
+                <div class="receipt-section">
+                    <div class="receipt-section-title">From (Sender)</div>
+                    <div class="receipt-field">
+                        <span class="receipt-field-label">Account Name</span>
+                        <span class="receipt-field-value">EmpireStateBank</span>
+                    </div>
+                </div>
+
+                <div class="receipt-section">
+                    <div class="receipt-section-title">Transaction Details</div>
+                    <div class="receipt-field">
+                        <span class="receipt-field-label">Transaction #</span>
+                        <span class="receipt-field-value" id="receiptTransactionNumber">-</span>
+                    </div>
+                    <div class="receipt-field">
+                        <span class="receipt-field-label">Date & Time</span>
+                        <span class="receipt-field-value" id="receiptDate">-</span>
+                    </div>
+                </div>
+
+                <div class="receipt-footer">
+                    <p class="receipt-footer-text">Thank you for banking with EmpireStateBank</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="receipt-actions">
+            <button class="receipt-action-btn receipt-share-image-btn" id="shareImageBtn">📸 Share as Image</button>
+            <button class="receipt-action-btn receipt-share-pdf-btn" id="sharePdfBtn">📄 Share as PDF</button>
+        </div>
+    </div>
+
+    <!-- HIDDEN EXPORT CARD -->
+    <div class="receipt-card-export" id="receiptCardExport">
+        <div class="receipt-watermark">💳</div>
+
+        <div class="receipt-logo">💳 ESB</div>
+
+        <div class="receipt-status-badge" id="receiptStatusBadgeExport"></div>
+
+        <div class="receipt-amount">
+            <div class="receipt-amount-label">Amount Transferred</div>
+            <div class="receipt-amount-value" id="receiptAmountExport">₦0.00</div>
+        </div>
+
+        <div class="receipt-section">
+            <div class="receipt-section-title">To (Recipient)</div>
+            <div class="receipt-field">
+                <span class="receipt-field-label">Account Name</span>
+                <span class="receipt-field-value" id="receiptRecipientNameExport">-</span>
+            </div>
+            <div class="receipt-field">
+                <span class="receipt-field-label">Bank</span>
+                <span class="receipt-field-value" id="receiptRecipientBankExport">-</span>
+            </div>
+            <div class="receipt-field">
+                <span class="receipt-field-label">Phone</span>
+                <span class="receipt-field-value" id="receiptRecipientPhoneExport">-</span>
+            </div>
+        </div>
+
+        <div class="receipt-section">
+            <div class="receipt-section-title">From (Sender)</div>
+            <div class="receipt-field">
+                <span class="receipt-field-label">Account Name</span>
+                <span class="receipt-field-value">EmpireStateBank</span>
+            </div>
+        </div>
+
+        <div class="receipt-section">
+            <div class="receipt-section-title">Transaction Details</div>
+            <div class="receipt-field">
+                <span class="receipt-field-label">Transaction #</span>
+                <span class="receipt-field-value" id="receiptTransactionNumberExport">-</span>
+            </div>
+            <div class="receipt-field">
+                <span class="receipt-field-label">Date & Time</span>
+                <span class="receipt-field-value" id="receiptDateExport">-</span>
+            </div>
+        </div>
+
+        <div class="receipt-footer">
+            <p class="receipt-footer-text">Thank you for banking with EmpireStateBank</p>
+        </div>
+    </div>
+
+    <script>
+        // USER DATA
+        const users = {
+            '1234': {
+                pin: '1234',
+                accountName: 'John Doe',
+                bankName: 'EmpireStateBank',
+                phoneNumber: '+234 (0) 803 123 4567',
+                withdrawals: [
+                    {
+                        id: 1,
+                        recipientName: 'Jane Smith',
+                        recipientBank: 'Access Bank',
+                        recipientPhone: '+234 (0) 701 567 8901',
+                        amount: 50000,
+                        status: 'Successful',
+                        transactionNumber: '202603271234567890123456',
+                        date: '2026-03-27 14:30:00'
+                    },
+                    {
+                        id: 2,
+                        recipientName: 'Michael Johnson',
+                        recipientBank: 'GTBank',
+                        recipientPhone: '+234 (0) 805 234 5678',
+                        amount: 100000,
+                        status: 'Successful',
+                        transactionNumber: '202603271234567890123457',
+                        date: '2026-03-26 09:15:00'
+                    },
+                    {
+                        id: 3,
+                        recipientName: 'Sarah Williams',
+                        recipientBank: 'First Bank',
+                        recipientPhone: '+234 (0) 702 345 6789',
+                        amount: 75000,
+                        status: 'Pending',
+                        transactionNumber: '202603271234567890123458',
+                        date: '2026-03-25 16:45:00'
+                    },
+                    {
+                        id: 4,
+                        recipientName: 'Robert Brown',
+                        recipientBank: 'Zenith Bank',
+                        recipientPhone: '+234 (0) 806 456 7890',
+                        amount: 25000,
+                        status: 'Failed',
+                        transactionNumber: '202603271234567890123459',
+                        date: '2026-03-24 11:20:00'
+                    }
+                ]
+            },
+            '5678': {
+                pin: '5678',
+                accountName: 'Alice Johnson',
+                bankName: 'EmpireStateBank',
+                phoneNumber: '+234 (0) 810 987 6543',
+                withdrawals: [
+                    {
+                        id: 5,
+                        recipientName: 'David Lee',
+                        recipientBank: 'UBA',
+                        recipientPhone: '+234 (0) 703 123 4567',
+                        amount: 150000,
+                        status: 'Successful',
+                        transactionNumber: '202603275678567890123460',
+                        date: '2026-03-27 10:00:00'
+                    },
+                    {
+                        id: 6,
+                        recipientName: 'Emma Davis',
+                        recipientBank: 'FCMB',
+                        recipientPhone: '+234 (0) 804 234 5678',
+                        amount: 200000,
+                        status: 'Successful',
+                        transactionNumber: '202603275678567890123461',
+                        date: '2026-03-26 15:30:00'
+                    },
+                    {
+                        id: 7,
+                        recipientName: 'Oliver Martinez',
+                        recipientBank: 'Stanbic IBTC',
+                        recipientPhone: '+234 (0) 808 345 6789',
+                        amount: 60000,
+                        status: 'Pending',
+                        transactionNumber: '202603275678567890123462',
+                        date: '2026-03-25 13:10:00'
+                    }
+                ]
+            }
         };
-      }
 
-      function showStatus() {
-        const records = withdrawalRecords[currentPin];
-        let rows = "";
-        if(records && records.length) {
-          rows = records.map(r =>
-            `<tr>
-              <td>${r.date}</td>
-              <td>₦${r.amount}</td>
-              <td class="status ${pinStatusClass(r.status)}">${r.status}</td>
-            </tr>`
-          ).join("");
+        let currentUser = null;
+        let currentWithdrawal = null;
+
+        // PIN LOGIN HANDLING
+        const pinInputs = document.querySelectorAll('.pin-input-fields input');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginError = document.getElementById('loginError');
+
+        pinInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                if (e.target.value && index < pinInputs.length - 1) {
+                    pinInputs[index + 1].focus();
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                    pinInputs[index - 1].focus();
+                }
+            });
+        });
+
+        loginBtn.addEventListener('click', () => {
+            const pin = Array.from(pinInputs).map(input => input.value).join('');
+
+            if (pin.length !== 4) {
+                loginError.textContent = 'Please enter a 4-digit PIN';
+                return;
+            }
+
+            if (users[pin]) {
+                currentUser = users[pin];
+                loginError.textContent = '';
+                showMainScreen();
+            } else {
+                loginError.textContent = 'Invalid PIN. Try again.';
+                pinInputs.forEach(input => input.value = '');
+                pinInputs[0].focus();
+            }
+        });
+
+        // SHOW MAIN SCREEN
+        function showMainScreen() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainScreen').classList.remove('hidden');
+            document.getElementById('accountName').textContent = currentUser.accountName;
+            document.getElementById('bankName').textContent = currentUser.bankName;
+
+            renderWithdrawals();
         }
 
-        main.innerHTML = `
-          <div class="container">
-            <h2>Withdrawal Status</h2>
-            <table>
-              <thead>
-                <tr><th>Date</th><th>Amount</th><th>Status</th></tr>
-              </thead>
-              <tbody>
-                ${rows}
-              </tbody>
-            </table>
-            <button class="logout-btn" id="logout-btn">Log out</button>
-          </div>
-        `;
+        // RENDER WITHDRAWALS
+        function renderWithdrawals() {
+            const withdrawalsList = document.getElementById('withdrawalsList');
+            withdrawalsList.innerHTML = '';
 
-        document.getElementById('logout-btn').onclick = function() {
-          state = "pin";
-          errorMsg = "";
-          currentPin = "";
-          render();
+            currentUser.withdrawals.forEach(withdrawal => {
+                const item = document.createElement('div');
+                item.className = 'withdrawal-item';
+                item.onclick = () => showReceipt(withdrawal);
+
+                const statusClass = `status-${withdrawal.status.toLowerCase()}`;
+                const formattedDate = new Date(withdrawal.date).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+
+                item.innerHTML = `
+                    <div class="withdrawal-header">
+                        <div>
+                            <div class="withdrawal-recipient">Transfer to ${withdrawal.recipientName}</div>
+                            <div class="withdrawal-bank">${withdrawal.recipientBank}</div>
+                        </div>
+                        <div class="withdrawal-amount">₦${withdrawal.amount.toLocaleString()}</div>
+                    </div>
+                    <div class="withdrawal-footer">
+                        <div class="withdrawal-date">${formattedDate}</div>
+                        <div class="withdrawal-status ${statusClass}">${withdrawal.status}</div>
+                    </div>
+                `;
+
+                withdrawalsList.appendChild(item);
+            });
         }
-      }
 
-      function render() {
-        if (state === "init-loading") {
-          showLoading("Preparing Withdrawal Status...");
-          setTimeout(() => {
-            state = "pin";
-            render();
-          }, 1500);
+        // SHOW RECEIPT
+        function showReceipt(withdrawal) {
+            currentWithdrawal = withdrawal;
+            document.getElementById('mainScreen').classList.add('hidden');
+            document.getElementById('receiptScreen').classList.remove('hidden');
+
+            const statusClass = `status-${withdrawal.status.toLowerCase()}`;
+            document.getElementById('receiptStatusBadge').className = `receipt-status-badge ${statusClass}`;
+            document.getElementById('receiptStatusBadge').textContent = withdrawal.status;
+
+            document.getElementById('receiptAmount').textContent = `₦${withdrawal.amount.toLocaleString()}`;
+            document.getElementById('receiptRecipientName').textContent = withdrawal.recipientName;
+            document.getElementById('receiptRecipientBank').textContent = withdrawal.recipientBank;
+            document.getElementById('receiptRecipientPhone').textContent = withdrawal.recipientPhone;
+            document.getElementById('receiptTransactionNumber').textContent = withdrawal.transactionNumber;
+
+            const formattedDate = new Date(withdrawal.date).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+            document.getElementById('receiptDate').textContent = formattedDate;
+
+            // Also update export card
+            updateExportCard(withdrawal, statusClass, formattedDate);
         }
-        else if (state === "pin") showPinInput();
-        else if (state === "loading") showLoading("Verifying PIN and fetching withdrawal records...");
-        else if (state === "status") showStatus();
-      }
 
-      // Init
-      render();
-      // ---- END WITHDRAWAL LOGIC ----
-    }
-  </script>
+        // UPDATE EXPORT CARD
+        function updateExportCard(withdrawal, statusClass, formattedDate) {
+            document.getElementById('receiptStatusBadgeExport').className = `receipt-status-badge ${statusClass}`;
+            document.getElementById('receiptStatusBadgeExport').textContent = withdrawal.status;
+            document.getElementById('receiptAmountExport').textContent = `₦${withdrawal.amount.toLocaleString()}`;
+            document.getElementById('receiptRecipientNameExport').textContent = withdrawal.recipientName;
+            document.getElementById('receiptRecipientBankExport').textContent = withdrawal.recipientBank;
+            document.getElementById('receiptRecipientPhoneExport').textContent = withdrawal.recipientPhone;
+            document.getElementById('receiptTransactionNumberExport').textContent = withdrawal.transactionNumber;
+            document.getElementById('receiptDateExport').textContent = formattedDate;
+        }
+
+        // BACK BUTTON
+        document.getElementById('backBtn').addEventListener('click', () => {
+            document.getElementById('receiptScreen').classList.add('hidden');
+            document.getElementById('mainScreen').classList.remove('hidden');
+        });
+
+        // LOGOUT BUTTON
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            currentUser = null;
+            currentWithdrawal = null;
+            document.getElementById('mainScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            pinInputs.forEach(input => input.value = '');
+            pinInputs[0].focus();
+        });
+
+        // SHARE AS IMAGE
+        document.getElementById('shareImageBtn').addEventListener('click', async () => {
+            const receiptCardExport = document.getElementById('receiptCardExport');
+            try {
+                const canvas = await html2canvas(receiptCardExport, {
+                    backgroundColor: '#ffffff',
+                    scale: 2,
+                    allowTaint: true,
+                    useCORS: true
+                });
+                
+                canvas.toBlob((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `receipt-${currentWithdrawal.transactionNumber}.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                }, 'image/png');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error generating image: ' + error.message);
+            }
+        });
+
+        // SHARE AS PDF
+        document.getElementById('sharePdfBtn').addEventListener('click', async () => {
+            const receiptCardExport = document.getElementById('receiptCardExport');
+            try {
+                const canvas = await html2canvas(receiptCardExport, {
+                    backgroundColor: '#ffffff',
+                    scale: 2,
+                    allowTaint: true,
+                    useCORS: true
+                });
+                
+                const { jsPDF } = window.jspdf;
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                const imgWidth = 180;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                const yPosition = (pdf.internal.pageSize.height - imgHeight) / 2;
+
+                pdf.addImage(imgData, 'PNG', 15, yPosition, imgWidth, imgHeight);
+                pdf.save(`receipt-${currentWithdrawal.transactionNumber}.pdf`);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error generating PDF: ' + error.message);
+            }
+        });
+
+        // FOCUS PIN INPUT ON LOAD
+        window.addEventListener('load', () => {
+            pinInputs[0].focus();
+        });
+    </script>
 </body>
 </html>
